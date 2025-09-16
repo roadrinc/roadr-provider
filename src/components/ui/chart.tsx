@@ -219,14 +219,7 @@ function ChartTooltipContent({
               )}
             >
               {formatter && itemData.value !== undefined && itemData.name ? (
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter(
-                  itemData.value as any,
-                  itemData.name as any,
-                  item as any,
-                  index,
-                  itemData.payload as any
-                )
+                formatter(itemData.value, itemData.name, item, index)
               ) : (
                 <>
                   {itemConfig?.icon ? (
