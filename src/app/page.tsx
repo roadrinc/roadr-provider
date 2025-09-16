@@ -1,103 +1,335 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RoadrLogo } from '@/components/RoadrLogo';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { QuickPaymentPage } from '@/components/QuickPaymentPage';
+import { QuickSetupForm } from '@/components/QuickSetupForm';
+import { Dashboard } from '@/components/Dashboard';
+import { Eye, EyeOff, AlertCircle, User, Shield } from 'lucide-react';
+
+interface User {
+  email: string;
+  businessName: string;
+  phone: string;
+  serviceArea?: string;
+  serviceType?: string;
+  services?: string[];
+  servicePricing?: Record<
+    string,
+    { price: string; unit: string; mileageRate?: string }
+  >;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
+  const [loginType, setLoginType] = useState('provider');
+  const [currentPage, setCurrentPage] = useState('login');
+  const [user, setUser] = useState<User | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const clearErrors = () => {
+    setLocalError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    clearErrors();
+
+    if (!email || !password) {
+      setLocalError('Please enter email and password');
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setLocalError('Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('Login attempt:', { email, password, loginType });
+    } catch (error: unknown) {
+      setLocalError(error instanceof Error ? error.message : 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    setLoginType(value);
+    clearErrors();
+    // Clear form when switching tabs
+    setEmail('');
+    setPassword('');
+  };
+
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+    clearErrors();
+  };
+
+  const handlePaymentSuccess = async (paymentMethodId: string) => {
+    console.log('Payment successful:', paymentMethodId);
+    // Payment success is handled by the payment page navigation
+  };
+
+  const handleSetupSubmit = async (data: unknown) => {
+    console.log('Setup form submitted:', data);
+    // In a real app, you would save this data to your backend
+    // Update user data with setup information
+    if (data && typeof data === 'object' && 'businessName' in data) {
+      const setupData = data as {
+        businessName: string;
+        phone: string;
+        serviceArea: string;
+        serviceType: string;
+        services: string[];
+        servicePricing: Record<
+          string,
+          { price: string; unit: string; mileageRate?: string }
+        >;
+      };
+      setUser((prev) => ({
+        ...prev,
+        email: prev?.email || '',
+        businessName: setupData.businessName,
+        phone: setupData.phone,
+        serviceArea: setupData.serviceArea,
+        serviceType: setupData.serviceType,
+        services: setupData.services,
+        servicePricing: setupData.servicePricing,
+      }));
+    }
+  };
+
+  const handleSignup = () => {
+    console.log('Sign up button clicked!');
+    // Create a mock user object for the payment page
+    const mockUser = {
+      email: email || 'new-user@example.com',
+      businessName: 'New Business',
+      phone: '+1234567890',
+    };
+    setUser(mockUser);
+    setCurrentPage('payment');
+  };
+
+  const displayError = localError;
+
+  // Show payment page if currentPage is 'payment'
+  if (currentPage === 'payment') {
+    return (
+      <QuickPaymentPage
+        onPaymentSuccess={handlePaymentSuccess}
+        onNavigate={handleNavigate}
+        user={user}
+      />
+    );
+  }
+
+  // Show setup form if currentPage is 'setup'
+  if (currentPage === 'setup') {
+    return (
+      <QuickSetupForm
+        onSubmit={handleSetupSubmit}
+        onNavigate={handleNavigate}
+        user={user}
+      />
+    );
+  }
+
+  // Show dashboard if currentPage is 'dashboard'
+  if (currentPage === 'dashboard') {
+    // If user is null, redirect back to login
+    if (!user) {
+      setCurrentPage('login');
+      return null;
+    }
+
+    return (
+      <Dashboard
+        user={user}
+        onLogout={() => setCurrentPage('login')}
+        onNavigate={handleNavigate}
+        onVerificationSuccess={() => {}}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <RoadrLogo width={120} height={32} className="text-foreground" />
+            <ThemeToggle />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl text-primary mb-2">Welcome back</h1>
+            <p className="text-muted-foreground">
+              Sign in to your registered account
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <Tabs
+                value={loginType}
+                onValueChange={handleTabChange}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger
+                    value="provider"
+                    className="flex items-center gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    Provider
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="admin"
+                    className="flex items-center gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {displayError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{displayError}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      clearErrors();
+                    }}
+                    placeholder={
+                      loginType === 'admin'
+                        ? 'admin@roadr.com'
+                        : 'Enter your registered email'
+                    }
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        clearErrors();
+                      }}
+                      placeholder="Enter your password"
+                      required
+                      disabled={isLoading}
+                    />
+                    <Button
+                      type="button"
+                      variant={'ghost' as const}
+                      size={'sm' as const}
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Signing in...
+                    </div>
+                  ) : (
+                    `Sign in as ${loginType === 'admin' ? 'Admin' : 'Provider'}`
+                  )}
+                </Button>
+              </form>
+
+              {loginType === 'provider' && (
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Don&apos;t have an account?{' '}
+                    <span
+                      onClick={handleSignup}
+                      className="text-roadr-orange hover:text-roadr-orange-dark underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      style={{
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                      }}
+                    >
+                      Sign up
+                    </span>
+                  </p>
+                </div>
+              )}
+
+              {/* Demo Credentials */}
+              <div className="mt-6 p-4 bg-muted rounded-lg">
+                <h4 className="text-sm font-medium mb-2">Demo Credentials:</h4>
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <div>
+                    <strong>Admin:</strong> admin@roadr.com / admin123
+                  </div>
+                  <div>
+                    <strong>Provider:</strong> demo@provider.com / demo123
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
